@@ -77,6 +77,7 @@ methylation = load_methylation_h5(train_path)
 methylation_test = load_methylation_h5(test_path)
 print(f"Loading time: {time.time() - start:.4f}s")
 
+#Split data
 indices = np.arange(len(age))
 [indices_train, indices_valid, train, valid] = train_test_split(
     indices, age, test_size=0.3, shuffle=True

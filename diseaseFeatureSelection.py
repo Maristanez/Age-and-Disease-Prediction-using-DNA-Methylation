@@ -19,26 +19,20 @@ np.random.seed(seed)
 random.seed(seed)
 
 params = {
-    'device': 'gpu',
-    "boosting_type": "gbdt",
-    "num_leaves": 31,
-    "max_depth": -1,
-    "learning_rate": 0.1,
-    "n_estimators": 100,
-    "subsample_for_bin": 200000,
-    "objective": None,
-    "class_weight": None,
-    "min_split_gain": 0.0,
-    "min_child_weight": 0.001,
-    "min_child_samples": 20,
-    "subsample": 1.0,
-    "subsample_freq": 0,
-    "colsample_bytree": 1.0,
-    "reg_alpha": 0.0,
-    "reg_lambda": 0.0,
-    "random_state": seed,
-    "n_jobs": None,
-    "importance_type": "split",
+    'boosting_type': 'gbdt',
+    'objective': 'binary',           # or 'regression' if predicting age
+    'metric': 'binary_logloss',     # or 'auc' if classification
+    'learning_rate': 0.01,          # smaller to reduce overfitting
+    'num_leaves': 8,                # keep small due to low sample size
+    'max_depth': 4,                 # shallow trees help generalize
+    'min_data_in_leaf': 20,         # reduce overfitting on noise
+    'feature_fraction': 0.05,       # randomly sample 5% of features per tree
+    'bagging_fraction': 0.8,        # randomly sample 80% of rows
+    'bagging_freq': 1,              # perform bagging every tree
+    'lambda_l1': 1.0,               # L1 regularization (feature selection)
+    'lambda_l2': 1.0,               # L2 regularization
+    'verbosity': -1,
+    'is_unbalance': True            # use if class imbalance is present
 }
 
 chunkSize = 60689
@@ -115,10 +109,8 @@ while i <= chunkSize*8:
     print(f"Training time: {time.time() - start:.4f}s")
     
     print("Getting indices of top N features")
-    explainer = shap.Explainer(model, methylation_train)
-    shap_values = explainer(methylation_test)
-
-    mean_abs_shap = np.abs(shap_values.values).mean(axis=0)
+    mean_abs_shap = mean_abs_shap = get_top_features(model, methylation_train)
+    #Add it to total
     total_mean_SHAP_values = np.concatenate((total_mean_SHAP_values, mean_abs_shap))
     i += chunkSize
 

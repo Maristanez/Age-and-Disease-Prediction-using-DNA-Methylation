@@ -4,7 +4,9 @@ import h5py
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-#Probably need to change code since its changed to LGBMClassifier
+from sklearn.metrics import (
+    f1_score, accuracy_score, precision_score, recall_score
+)
 from lightgbm import LGBMClassifier
 import shap
 
@@ -36,9 +38,16 @@ chunkSize = 111743
 
 disease = "Alzheimer's disease"
 control = 'control'
+mci = "Mild Cognitive Impairment"
+
+#Evaluation for classifier
+def evaluation(y_valid, y_pred):
+    print("F1 Score:", f1_score(y_valid, y_pred))
+    print("Accuracy:", accuracy_score(y_valid, y_pred))
+    print("Precision:", precision_score(y_valid, y_pred))
+    print("Recall:", recall_score(y_valid, y_pred))
 
 #load h5 data
-#FIX THIS
 def load_methylation_h5(path, i,sample_indices):
     with h5py.File(path, "r") as f:
         data = f["data"]
@@ -98,7 +107,11 @@ while i <= chunkSize*8:
     start = time.time()
     model.fit(methylation_train, y_train)
     print(f"Training time: {time.time() - start:.4f}s")
-    
+
+    #Evaluate model
+    prediction = model.predict(methylation_valid)
+    evaluation(y_valid, prediction)
+
     print("Getting indices of top N features")
     mean_abs_shap = mean_abs_shap = get_top_features(model, methylation_train)
     #Add it to total

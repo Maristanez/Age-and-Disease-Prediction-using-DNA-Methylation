@@ -131,3 +131,7 @@ SHAPResults = pd.DataFrame(
     }
 )
 SHAPResults.to_csv('AgeResults.csv', index = False)
+
+# Save top 20 CpG sites based on SHAP importance
+top_20_SHAP = SHAPResults.sort_values(by='Mean ABS SHAP Value', ascending=False).head(20)
+top_20_SHAP.to_csv("age_top_20_cpg_sites.csv", index=False)

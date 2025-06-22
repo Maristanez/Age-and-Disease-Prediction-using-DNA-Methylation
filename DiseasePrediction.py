@@ -26,7 +26,7 @@ control = 'control'
 mci = "Mild Cognitive Impairment"
 
 #Number of top contributing features to be included in model
-topN = 2500
+topN = 500
 
 #Parameters for model
 #Might need to change parameters
@@ -86,11 +86,7 @@ def evaluation(y_valid, y_pred, y_proba):
 def load_methylation_h5(path, sample_indices):
     with h5py.File(path, "r") as f:
         data = f["data"]
-        if len(sample_indices) == 0:
-            #For loading test dataset
-            methylation = data[:,featureIndices]
-        else:
-            methylation = data[sample_indices, :][: , featureIndices]
+        methylation = data[sample_indices, :][: , featureIndices]
     return methylation
 
 #load idmap
@@ -179,3 +175,7 @@ SHAPResults = pd.DataFrame(
     }
 )
 SHAPResults.to_csv('diseaseResults.csv', index = False)
+
+# Save top 20 CpG sites based on SHAP importance
+top_20_SHAP = SHAPResults.sort_values(by='Mean ABS SHAP Value', ascending=False).head(20)
+top_20_SHAP.to_csv("disease_top_20_cpg_sites.csv", index=False)

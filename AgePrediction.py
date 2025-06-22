@@ -13,13 +13,10 @@ import shap
 from scipy.stats import ttest_1samp
 
 #File paths
-idmap_train_path = "trainmap.csv"
-idmap_test_path = "testmap.csv"
-train_path = "train.h5"
-test_path = "test.h5"
-siteList = "siteList.txt"
-#Switching to Disease SHAP values shows similar MAE...
-SHAPValues = "Age SHAP Values.txt"
+idmap_train_path = "age_idmap.csv"
+train_path = "age_methylation_data.h5"
+siteList = "age_CpG_sites.txt"
+SHAPValues = "Age_SHAP_Values.txt"
 
 #Number of top contributing features to be included in model
 topN = 468
@@ -74,7 +71,6 @@ age = idmap.age.to_numpy()
 print("Loading Data...")
 start = time.time()
 methylation = load_methylation_h5(train_path)
-methylation_test = load_methylation_h5(test_path)
 print(f"Loading time: {time.time() - start:.4f}s")
 
 #Split data
@@ -105,7 +101,7 @@ print("Mean Absolute Error:" , mae)
 #Generate SHAP
 print("SHAP results")
 explainer = shap.Explainer(model, methylation_train)
-shap_values = explainer(methylation_test)
+shap_values = explainer(methylation_valid)
 
 #Assign CpG site name to feature name
 with open(siteList, "r") as f:
@@ -113,7 +109,7 @@ with open(siteList, "r") as f:
 shap_values.feature_names = row_names[featureIndices]
 
 # Summary plot
-shap.summary_plot(shap_values, methylation_test)
+shap.summary_plot(shap_values, methylation_valid)
 
 #Save results into csv file including CpG site, mean absolute value, standard deviation, and p-value
 #Note p-value below 0.05 indicates mean absolute value is statistically significantly different from 0

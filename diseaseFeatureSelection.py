@@ -6,13 +6,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 #Probably need to change code since its changed to LGBMClassifier
 from lightgbm import LGBMClassifier
-from sklearn.metrics import mean_absolute_error
 import shap
 
-idmap_train_path = "trainmap.csv"
-idmap_test_path = "testmap.csv"
-train_path = "train.h5"
-test_path = "test.h5"
+idmap_train_path = "disease_idmap.csv"
+train_path = "disease_methylation_data.h5"
 
 seed = int(time.time())
 np.random.seed(seed)
@@ -35,8 +32,7 @@ params = {
     'is_unbalance': True            # use if class imbalance is present
 }
 
-chunkSize = 60689
-methylationSiteCount = 485512
+chunkSize = 111743
 
 disease = "Alzheimer's disease"
 control = 'control'
@@ -46,21 +42,17 @@ control = 'control'
 def load_methylation_h5(path, i,sample_indices):
     with h5py.File(path, "r") as f:
         data = f["data"]
-        if len(sample_indices) == 0:
-            #For loading test dataset
-            methylation = data[:, i-chunkSize:i]
-        else:
-            methylation = data[sample_indices, i-chunkSize:i]
+        methylation = data[sample_indices, i-chunkSize:i]
     return methylation
 
 #load idmap
 def load_idmap(idmap_dir, disease, control):
     idmap = pd.read_csv(idmap_dir, sep=",")
-    mask = (idmap['disease'] == disease) | (idmap['disease'] == control)
+    mask = (idmap['disease_state'] == disease) | (idmap['disease_state'] == control)
     diseaseSelection = idmap[mask].copy()
 
-    diseaseSelection['disease'] = diseaseSelection['disease'].replace({disease: 1, control: 0})
-    disease_type = diseaseSelection.disease.to_numpy()
+    diseaseSelection['disease_state'] = diseaseSelection['disease_state'].replace({disease: 1, control: 0})
+    disease_type = diseaseSelection.disease_state.to_numpy()
     selected_indices = idmap.index[mask].to_numpy()
     return disease_type, selected_indices
 
@@ -77,7 +69,7 @@ def split_training(indices,y):
 
 def get_top_features(model, methylation_train):
     explainer = shap.Explainer(model, methylation_train)
-    shap_values = explainer(methylation_test)
+    shap_values = explainer(methylation_valid)
     mean_abs_shap = np.abs(shap_values.values).mean(axis=0)
     return mean_abs_shap
 
@@ -92,8 +84,7 @@ while i <= chunkSize*8:
     print("Loading Data...")
     start = time.time()
     methylation = load_methylation_h5(train_path,i,disease_indices)
-    #print(methylation)
-    methylation_test = load_methylation_h5(test_path,i,[])
+
     print(f"Loading time: {time.time() - start:.4f}s")
 
     indices = np.arange(len(disease_type))
@@ -116,4 +107,4 @@ while i <= chunkSize*8:
 
 print("Saving NumPy Array")
 print(total_mean_SHAP_values.size)
-np.savetxt('Disease SHAP Values.txt', total_mean_SHAP_values)
+np.savetxt('Disease_SHAP_Values.txt', total_mean_SHAP_values)

@@ -15,21 +15,18 @@ import matplotlib.pyplot as plt
 from scipy.stats import ttest_1samp
 
 #File paths
-idmap_train_path = "trainmap.csv"
-idmap_test_path = "testmap.csv"
-train_path = "train.h5"
-test_path = "test.h5"
-siteList = "siteList.txt"
-#Switching to Age SHAP values shows similar MAE...
-SHAPValues = "Disease SHAP Values.txt"
+idmap_train_path = "disease_idmap.csv"
+train_path = "disease_methylation_data.h5"
+siteList = "disease_CpG_sites.txt"
+SHAPValues = "Disease_SHAP_Values.txt"
 
 #Disease of interest to compare with control
 disease = "Alzheimer's disease"
 control = 'control'
+mci = "Mild Cognitive Impairment"
 
 #Number of top contributing features to be included in model
-topN = 650
-
+topN = 2500
 
 #Parameters for model
 #Might need to change parameters
@@ -61,6 +58,7 @@ featureIndices = np.array(sorted(topNFeatures))
 
 #Evaluation for classifier
 def evaluation(y_valid, y_pred, y_proba):
+    print("# of Features: ", topN)
     print("AUC-ROC:", roc_auc_score(y_valid, y_proba))
     print("F1 Score:", f1_score(y_valid, y_pred))
     print("Accuracy:", accuracy_score(y_valid, y_pred))
@@ -100,10 +98,10 @@ def load_methylation_h5(path, sample_indices):
 #Gets the disease type and the indices for loading h5 data of dataset
 def load_idmap(idmap_dir, disease, control):
     idmap = pd.read_csv(idmap_dir, sep=",")
-    mask = (idmap['disease'] == disease) | (idmap['disease'] == control)
+    mask = (idmap['disease_state'] == disease) | (idmap['disease_state'] == control)
     diseaseSelection = idmap[mask].copy()
-    diseaseSelection['disease'] = diseaseSelection['disease'].replace({disease: 1, control: 0})
-    disease_type = diseaseSelection.disease.to_numpy()
+    diseaseSelection['disease_state'] = diseaseSelection['disease_state'].replace({disease: 1, control: 0})
+    disease_type = diseaseSelection.disease_state.to_numpy()
     selected_indices = idmap.index[mask].to_numpy()
     return disease_type, selected_indices
 
@@ -125,7 +123,6 @@ disease_type, disease_indices = load_idmap(idmap_train_path, disease, control)
 print("Loading Data...")
 start = time.time()
 methylation = load_methylation_h5(train_path, disease_indices)
-methylation_test = load_methylation_h5(test_path, [])
 print(f"Loading time: {time.time() - start:.4f}s")
 
 #Split data into training and validation
@@ -151,16 +148,16 @@ evaluation(y_valid, prediction, predictionA)
 print("SHAP results")
 #SHAP Explainer
 explainer = shap.Explainer(model, methylation_train)
-shap_values = explainer(methylation_test)
+shap_values = explainer(methylation_valid)
 
 #Assign CpG site name to feature name
 with open(siteList, "r") as f:
-    row_names = np.array(f.read().splitlines())
-shap_values.feature_names = row_names[featureIndices]
+    feature_names = np.array(f.read().splitlines())
+shap_values.feature_names = feature_names[featureIndices]
 
 # Summary plot (global feature importance)
-shap.summary_plot(shap_values, methylation_test)
-shap.plots.bar(shap.Explanation(values=shap_values[1], data=methylation_test, feature_names=row_names[featureIndices]))
+shap.summary_plot(shap_values, methylation_valid)
+shap.plots.bar(shap.Explanation(values=shap_values[1], data=methylation_valid, feature_names=feature_names[featureIndices]))
 
 #Save results into csv file including CpG site, mean absolute value, standard deviation, and p-value
 #Note p-value below 0.05 indicates mean absolute value is statistically significantly different from 0
@@ -175,7 +172,7 @@ for i in range(shap_array.shape[1]):
 
 SHAPResults = pd.DataFrame(
     {
-        'Site Name':row_names[featureIndices],
+        'Site Name':feature_names[featureIndices],
         'Mean ABS SHAP Value':mean_abs_shap,
         'Stdev':std_shap,
         'p-value': p_values

@@ -8,51 +8,33 @@ from lightgbm import LGBMRegressor
 from sklearn.metrics import mean_absolute_error
 import shap
 
-idmap_train_path = "trainmap.csv"
-idmap_test_path = "testmap.csv"
-train_path = "train.h5"
-test_path = "test.h5"
+idmap_train_path = "age_idmap.csv"
+
+train_path = "age_methylation_data.h5"
+
 
 seed = int(time.time())
 np.random.seed(seed)
 random.seed(seed)
 
 params = {
-    'device': 'gpu',
-    "boosting_type": "gbdt",
-    "num_leaves": 31,
-    "max_depth": -1,
-    "learning_rate": 0.1,
-    "n_estimators": 100,
-    "subsample_for_bin": 200000,
-    "objective": None,
-    "class_weight": None,
-    "min_split_gain": 0.0,
-    "min_child_weight": 0.001,
-    "min_child_samples": 20,
-    "subsample": 1.0,
-    "subsample_freq": 0,
-    "colsample_bytree": 1.0,
-    "reg_alpha": 0.0,
-    "reg_lambda": 0.0,
-    "random_state": seed,
-    "n_jobs": None,
-    "importance_type": "split",
 }
 
-chunk_size = 60689
+chunk_size = 53953
 #485512 total sites in dataset
 
 #load h5 data
 def load_methylation_h5(path,i):
-    methylation = h5py.File(path, "r")["data"]
-    h5py.File(path, "r").close()
-    return methylation[:, i-chunk_size: i]
+    with h5py.File(path, "r") as f:
+        methylation = f["data"]  # access dataset
+        methylation = methylation[:, i - chunk_size: i]
+        return np.nan_to_num(methylation, nan=0.0)
 
 #load idmap
 def load_idmap(idmap_dir):
     idmap = pd.read_csv(idmap_dir, sep=",")
     age = idmap.age.to_numpy()
+    print(age.shape)
     return age
 
 #Split dataset using indices of age from the idmap
@@ -68,21 +50,23 @@ def split_training(indices,y):
 
 def get_top_features(model, methylation_train):
     explainer = shap.Explainer(model, methylation_train)
-    shap_values = explainer(methylation_test)
+    shap_values = explainer(methylation_valid)
     mean_abs_shap = np.abs(shap_values.values).mean(axis=0)
     return mean_abs_shap
 
 age = load_idmap(idmap_train_path)
 
 total_mean_SHAP_values = np.array([])
-#485512
+#485577
 i = chunk_size
-while i <= chunk_size*8:
+while i <= chunk_size*9:
     print(f"Feature Range: {i-chunk_size} - {i}")
     print("Loading Data...")
     start = time.time()
     methylation = load_methylation_h5(train_path,i)
-    methylation_test = load_methylation_h5(test_path,i)
+    print(methylation.shape)
+
+    #methylation_test = load_methylation_h5(test_path,i)
     print(f"Loading time: {time.time() - start:.4f}s")
 
     indices = np.arange(len(age))
@@ -109,4 +93,4 @@ while i <= chunk_size*8:
 
 print("Saving NumPy Array")
 print(total_mean_SHAP_values.size)
-np.savetxt('Age SHAP Values.txt', total_mean_SHAP_values)
+np.savetxt('Age_SHAP_Values.txt', total_mean_SHAP_values)

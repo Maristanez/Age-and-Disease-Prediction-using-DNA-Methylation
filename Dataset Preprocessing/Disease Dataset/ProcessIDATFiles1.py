@@ -1,11 +1,11 @@
 import os
 import shutil
 
-# Path to your main directory containing subfolders like GSM4649388/
+# Path to downloaded IDAT files of GSE153712 (Files were manually downloaded and unzipped)
 source_dir = "GSE153712_RAW"
 
 # Destination folder where all .idat files will be copied
-target_dir = "Age-and-Disease-Prediction-using-DNA-Methylation/Dataset Preprocessing/Disease Dataset/IDAT Files"
+target_dir = "Dataset Preprocessing/Disease Dataset/IDAT Files"
 
 # Create target folder if it doesn't exist
 os.makedirs(target_dir, exist_ok=True)

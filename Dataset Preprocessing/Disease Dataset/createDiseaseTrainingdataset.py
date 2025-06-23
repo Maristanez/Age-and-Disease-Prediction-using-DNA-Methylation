@@ -26,12 +26,12 @@ print(methylation_T.shape)
 print("Final shape (samples, CpGs):", methylation_T.shape)
 
 # Save to HDF5
-with h5py.File("methylation_data.h5", "w") as f:
+with h5py.File("disease_methylation_data.h5", "w") as f:
     f.create_dataset("data", data=methylation_T.values, dtype='float32')
     f.create_dataset("row_names", data=np.array(methylation_T.index, dtype='S'))   # sample IDs
     f.create_dataset("col_names", data=np.array(methylation_T.columns, dtype='S')) # CpG IDs
 
-print("Saved to methylation_data.h5")
+print("Saved to disease_methylation_data.h5")
 
 print("Getting Site List")
 for gse_name in gse_list:
@@ -49,4 +49,4 @@ for gse_name in gse_list:
     gc.collect()
 print(methylation.head)
 print("saving")
-methylation.index.to_series().to_csv("sitelist.txt", index = False, header = False)
+methylation.index.to_series().to_csv("disease_CpG_sites.txt", index = False, header = False)

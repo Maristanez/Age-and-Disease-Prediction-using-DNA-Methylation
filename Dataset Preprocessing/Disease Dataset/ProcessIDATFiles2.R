@@ -1,6 +1,6 @@
 library(minfi)
 
-idat_dir <- "./Age-and-Disease-Prediction-using-DNA-Methylation/Dataset Preprocessing/Disease Dataset/IDAT Files"
+idat_dir <- "./Dataset Preprocessing/Disease Dataset/IDAT Files"
 
 # Read IDATs
 rgSet <- read.metharray.exp(base = idat_dir, recursive = TRUE)

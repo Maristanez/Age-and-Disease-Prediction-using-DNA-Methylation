@@ -5,7 +5,7 @@ gse_list = ["GSE51032","GSE73103", "GSE64495", "GSE42861", "GSE40279", "GSE69270
 
 #Process data for every dataset
 for gse_name in gse_list:
-    gse = GEOparse.get_GEO(gse_name, destdir=".")
+    gse = GEOparse.get_GEO(gse_name, destdir="./Dataset Preprocessing/Age Dataset/SOFT Files")
 
     #Get CpG site names
     for gsm_name, gsm in gse.gsms.items():
@@ -48,8 +48,8 @@ for gse_name in gse_list:
     print(df.head())
     print(df_methylation.head())
 
-    df.to_csv(f'{gse_name}_idmap.csv', index = False)
-    df_methylation.to_csv(f'{gse_name}_methylation.csv', index = False)
+    df.to_csv(f'./Dataset Preprocessing/Age Dataset/ID Maps/{gse_name}_idmap.csv', index = False)
+    df_methylation.to_csv(f'./Dataset Preprocessing/Age Dataset/Methylation Files/{gse_name}_methylation.csv', index = False)
 
 import pandas as pd
 import gc

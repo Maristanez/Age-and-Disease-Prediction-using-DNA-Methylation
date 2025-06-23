@@ -5,7 +5,7 @@ gse_list = ["GSE153712"]
 
 #Process data for every dataset
 for gse_name in gse_list:
-    gse = GEOparse.get_GEO(gse_name, destdir=".")
+    gse = GEOparse.get_GEO(gse_name, destdir="./Dataset Preprocessing/Disease Dataset/SOFT Files")
 
     # List to hold the extracted rows
     records = []
@@ -38,4 +38,4 @@ for gse_name in gse_list:
     df = pd.DataFrame(records)
     print(df.head())
 
-    df.to_csv(f'{gse_name}_idmap.csv', index = False)
+    df.to_csv(f'./Dataset Preprocessing/Disease Dataset/ID Maps/{gse_name}_idmap.csv', index = False)

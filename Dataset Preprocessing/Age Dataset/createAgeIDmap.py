@@ -5,8 +5,8 @@ idmap = pd.DataFrame()
 
 for gse_name in gse_list:
     print(gse_name)
-    gse_idmap = pd.read_csv(F"{gse_name}_idmap.csv")
+    gse_idmap = pd.read_csv(F"f'./Dataset Preprocessing/Age Dataset/ID Maps/{gse_name}_idmap.csv'")
     gse_idmap["series_id"] = gse_name
     idmap = pd.concat([idmap, gse_idmap])
 
-idmap.to_csv("idmap.csv", index = False)
+idmap.to_csv("age_idmap.csv", index = False)

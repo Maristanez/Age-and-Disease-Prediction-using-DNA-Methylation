@@ -8,8 +8,8 @@ import seaborn as sns
 # File paths
 h5_file = "age_methylation_data.h5"
 site_list_file = "age_CpG_sites.txt"
-top_sites_file = "age_top_20_cpg_sites.csv"
-disease_top_sites_file = "disease_top_20_cpg_sites.csv"
+top_sites_file = "./top20s/age_top_20_cpg_sites.csv"
+disease_top_sites_file = "./top20s/disease_top_20_cpg_sites.csv"
 idmap_file = "age_idmap.csv"
 
 # Load CpG site names in the same order as H5 file

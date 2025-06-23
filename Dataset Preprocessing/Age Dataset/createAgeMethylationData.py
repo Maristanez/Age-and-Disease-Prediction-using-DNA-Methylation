@@ -10,7 +10,7 @@ print(gse_list[0:9])
 
 for gse_name in gse_list[0:9]:
     print(gse_name)
-    gse_methylation = pd.read_csv(F"{gse_name}_methylation.csv", index_col = 0)
+    gse_methylation = pd.read_csv(F"./Dataset Preprocessing/Age Dataset/SOFT Files/{gse_name}_methylation.csv", index_col = 0)
     gse_methylation.astype("float32")
     print(gse_methylation.shape)
     if methylation is None:

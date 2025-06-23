@@ -2,8 +2,8 @@ import GEOparse
 import pandas as pd
 
 # Load the GSE dataset
-filePath = "GSE144858_family.soft"
-gse = GEOparse.get_GEO(filepath=filePath)
+gse_name = "GSE144858"
+gse = GEOparse.get_GEO(gse_name, destdir="./Dataset Preprocessing/Disease Dataset/SOFT Files")
 
 
 #Get CpG site names
@@ -51,5 +51,5 @@ df = pd.DataFrame(records)
 print(df.head())
 print(df_methylation.head())
 
-df.to_csv('GSE144858_idmap.csv', index = False)
-df_methylation.to_csv('GSE144858_methylation.csv', index = False)
+df.to_csv('./Dataset Preprocessing/Disease Dataset/ID Maps/GSE144858_idmap.csv', index = False)
+df_methylation.to_csv('./Dataset Preprocessing/Disease Dataset/Methylation Files/GSE144858_methylation.csv', index = False)

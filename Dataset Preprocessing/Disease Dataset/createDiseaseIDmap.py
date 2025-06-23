@@ -5,7 +5,7 @@ idmap = pd.DataFrame()
 
 for gse_name in gse_list:
     print(gse_name)
-    gse_idmap = pd.read_csv(F"{gse_name}_idmap.csv")
+    gse_idmap = pd.read_csv(F"./Dataset Preprocessing/Disease Dataset/ID Maps/{gse_name}_idmap.csv")
     gse_idmap["disease_state"] = gse_idmap["disease_state"].replace({
     "healthy control": "control",
     "mild cognitive impairment": "Mild Cognitive Impairment",
@@ -14,4 +14,4 @@ for gse_name in gse_list:
     gse_idmap["series_id"] = gse_name
     idmap = pd.concat([idmap, gse_idmap])
 
-idmap.to_csv("idmap.csv", index = False)
+idmap.to_csv("disease_idmap.csv", index = False)

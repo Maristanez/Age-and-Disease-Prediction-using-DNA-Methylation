@@ -72,8 +72,9 @@ def evaluation(y_valid, y_pred, y_proba):
 
     # Plot Confusion Matrix
     cm = confusion_matrix(y_valid, y_pred)
-    ConfusionMatrixDisplay(confusion_matrix=cm).plot()
-    plt.savefig('confusion_matrix.png')
+    ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Control", "Alzheimer's"]).plot()
+    plt.savefig('./Results/confusion_matrix.png')
+    plt.close()
 
     # Plot ROC Curve
     fpr, tpr, _ = roc_curve(y_valid, y_proba)
@@ -84,14 +85,15 @@ def evaluation(y_valid, y_pred, y_proba):
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve')
     plt.legend()
-    plt.savefig('ROC Curve.png')
+    plt.savefig('./Results/ROC Curve.png')
     
-    evaluations = pd.read_csv('/Results/disease_evaluation_metrics.csv')
+    evaluations = pd.read_csv('./Results/disease_evaluation_metrics.csv')
     finalResults = pd.DataFrame([{
-        "Disease": "Final Prediction",
-        "Accuracy": 0.91,
-        "AUC": 0.94,
-        "F1": 0.89
+        "Feature Chunks": itt,
+        "AUC": rocauc,
+        "Accuracy": acc,
+        "Precision": pre,
+        "Recall": rec
     }])
     evaluations = pd.concat([evaluations, finalResults], ignore_index = True)
     evaluations.to_csv("./Results/disease_evaluation_metrics.csv", index = False)
@@ -168,9 +170,9 @@ with open(siteList, "r") as f:
 shap_values.feature_names = feature_names[featureIndices]
 
 # Summary plot (global feature importance)
-shap.summary_plot(shap_values, methylation_valid)
-plt.savefig('diseaseSHAP.png')
-#shap.plots.bar(shap.Explanation(values=shap_values[1], data=methylation_valid, feature_names=feature_names[featureIndices]))
+shap.summary_plot(shap_values, methylation_valid, show = False)
+plt.savefig('./Results/diseaseSHAP.png')
+plt.close()
 
 #Save results into csv file including CpG site, mean absolute value, standard deviation, and p-value
 #Note p-value below 0.05 indicates mean absolute value is statistically significantly different from 0

@@ -45,6 +45,18 @@ for i, cpg in enumerate(top_cpg_names):
 
     results.append({"CpG Site": cpg, "Pearson r": corr, "p-value": p})
 
+
+    # --- Individual plot ---
+    plt_indiv = plt.figure(figsize=(6, 4))
+    sns.regplot(x=ages[valid], y=values[valid], scatter_kws={'s': 10}, line_kws={'color': 'red'})
+    plt.title(f"{cpg}\nr = {corr:.2f}, p = {p:.2e}" if not np.isnan(corr) else f"{cpg}\nInvalid correlation")
+    plt.ylabel("Methylation Beta Value")
+    plt.xlabel("Age")
+    plt.tight_layout()
+    plt.savefig(f"Results/CpG Age Correlations/{cpg}.png", dpi=300)
+    plt.close()
+
+    # --- Grouped subplot ---
     plt.subplot(5, 4, i + 1)
     sns.regplot(x=ages[valid], y=values[valid], scatter_kws={'s': 10}, line_kws={'color': 'red'})
     plt.title(f"{cpg}\nr = {corr:.2f}, p = {p:.2e}" if not np.isnan(corr) else f"{cpg}\nInvalid correlation")
@@ -52,11 +64,11 @@ for i, cpg in enumerate(top_cpg_names):
     plt.xlabel("Age")
 
 plt.tight_layout()
-plt.savefig("age_top20_CpG_correlations.png", dpi=300)
+plt.savefig("Results/age_top20_CpG_correlations.png", dpi=300)
 plt.show()
 
 # Save correlation results
-pd.DataFrame(results).to_csv("age_top20_CpG_correlation_stats.csv", index=False)
+pd.DataFrame(results).to_csv("Results/age_top_20_CpG_correlation_stats.csv", index=False)
 
 # ---- Disease CpG Sites ----
 disease_df = pd.read_csv(disease_top_sites_file)
@@ -95,6 +107,20 @@ for i, cpg in enumerate(valid_disease_cpgs):
     })
 
     # Plot
+    # ---- Individual Figure ----
+    plt_indiv = plt.figure(figsize=(6, 4))
+    if len(x) > 0:
+        sns.regplot(x=x, y=y, scatter_kws={'s': 10}, line_kws={'color': 'blue'})
+        plt.title(f"{cpg}\nr = {corr:.2f}, p = {p:.2e}" if not np.isnan(corr) else f"{cpg}\nInvalid correlation")
+    else:
+        plt.title(f"{cpg}\nNo valid data")
+    plt.xlabel("Age")
+    plt.ylabel("Methylation Beta Value")
+    plt.tight_layout()
+    plt.savefig(f"Results/CpG Disease Correlations/{cpg}.png", dpi=300)
+    plt.close()
+
+    # ---- Grouped Subplot ----
     plt.subplot(5, 4, i + 1)
     if len(x) > 0:
         sns.regplot(x=x, y=y, scatter_kws={'s': 10}, line_kws={'color': 'blue'})
@@ -103,10 +129,10 @@ for i, cpg in enumerate(valid_disease_cpgs):
         plt.title(f"{cpg}\nNo valid data")
     plt.xlabel("Age")
     plt.ylabel("Methylation Beta Value")
-
+    
 plt.tight_layout()
-plt.savefig("disease_top20_CpG_correlations.png", dpi=300)
+plt.savefig("Results/disease_top20_CpG_correlations.png", dpi=300)
 plt.show()
 
 # Save correlation results for disease CpGs
-pd.DataFrame(disease_results).to_csv("disease_top20_CpG_correlation_stats.csv", index=False)
+pd.DataFrame(disease_results).to_csv("Results/disease_top_20_CpG_correlation_stats.csv", index=False)

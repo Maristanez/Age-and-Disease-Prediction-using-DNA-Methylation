@@ -12,7 +12,7 @@ import optuna
 idmap_train_path = "age_idmap.csv"
 train_path = "age_methylation_data.h5"
 SHAPValues = "Age_SHAP_Values.txt"
-topN = 500
+topN = 468
 
 # Reproducibility
 seed = int(time.time())

@@ -6,7 +6,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     roc_auc_score, f1_score, accuracy_score, precision_score, recall_score,
-    confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
 )
 from lightgbm import LGBMClassifier
 import shap
@@ -79,20 +78,20 @@ def get_top_features(model, methylation_train):
 #Evaluation for classifier
 def evaluation(y_valid, y_pred, y_proba):
     itt = f"{i-chunkSize} - {i}"
-    auc = roc_auc_score(y_valid, y_proba)
+    rocauc = roc_auc_score(y_valid, y_proba)
     f1 = f1_score(y_valid, y_pred)
     acc = accuracy_score(y_valid, y_pred)
     pre = precision_score(y_valid, y_pred)
     rec = recall_score(y_valid, y_pred)
 
-    print("AUC-ROC:", auc)
+    print("AUC-ROC:", rocauc)
     print("F1 Score:", f1)
     print("Accuracy:", acc)
     print("Precision:", pre)
     print("Recall:", rec)
     metrics_list.append({
         "Feature Chunks": itt,
-        "AUC": auc,
+        "AUC": rocauc,
         "Accuracy": acc,
         "Precision": pre,
         "Recall": rec

@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from lightgbm import LGBMRegressor
 from sklearn.metrics import (mean_absolute_error, median_absolute_error)
 import shap
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from scipy.stats import ttest_1samp
 
 #File paths
@@ -19,26 +19,21 @@ SHAPValues = "Age_SHAP_Values.txt"
 #Number of top contributing features to be included in model
 topN = 500
 
-
 #Parameters for model
-#Might need to change parameters
-seed = int(time.time())
-np.random.seed(seed)
-random.seed(seed)
 params = {
     'device' : 'gpu',
     'metric' : "mae",
     "boosting_type": "gbdt",
     'verbosity': -1,
-    'learning_rate': 0.04048392049598949,
-    'num_leaves': 29, 
-    'max_depth': 6, 
-    'min_child_samples': 26, 
-    'feature_fraction': 0.4430238083554771, 
-    'bagging_fraction': 0.711748619719678, 
-    'bagging_freq': 4, 
-    'lambda_l1': 0.06539240299243669, 
-    'lambda_l2': 0.0018043222664827436
+    'learning_rate': 0.0331645648184633, 
+    'num_leaves': 41, 
+    'max_depth': 8, 
+    'min_child_samples': 20, 
+    'feature_fraction': 0.4671137310932305, 
+    'bagging_fraction': 0.6826711995636782, 
+    'bagging_freq': 1, 
+    'lambda_l1': 1.2777036415584473, 
+    'lambda_l2': 0.012062828849108644
 }
 
 #Load selected features
@@ -90,14 +85,14 @@ mae = mean_absolute_error(prediction, valid)
 medae = median_absolute_error(prediction, valid)
 print("Mean Absolute Error:" , mae)
 print("Median Absolute Error", medae)
-evaluations = pd.read_csv('/Results/age_evaluation_metrics.csv')
+evaluations = pd.read_csv('Results/age_evaluation_metrics.csv')
 finalResults = pd.DataFrame([{
     "Feature Chunks": itt,
     "Mean Absolute Error": mae,
     "Median Absolute Error": medae
     }])
 evaluations = pd.concat([evaluations, finalResults], ignore_index = True)
-evaluations.to_csv("./Results/disease_evaluation_metrics.csv", index = False)
+evaluations.to_csv("Results/age_evaluation_metrics.csv", index = False)
 
 #Generate SHAP
 print("SHAP results")
@@ -110,8 +105,9 @@ with open(siteList, "r") as f:
 shap_values.feature_names = row_names[featureIndices]
 
 # Summary plot
-shap.summary_plot(shap_values, methylation_valid)
+shap.summary_plot(shap_values, methylation_valid, show=False)
 plt.savefig('./Results/ageSHAP.png')
+plt.close()
 
 #Save results into csv file including CpG site, mean absolute value, standard deviation, and p-value
 #Note p-value below 0.05 indicates mean absolute value is statistically significantly different from 0
@@ -132,7 +128,6 @@ SHAPResults = pd.DataFrame(
         'p-value': p_values
     }
 )
-#SHAPResults.to_csv('AgeResults.csv', index = False)
 
 # Save top 20 CpG sites based on SHAP importance
 top_20_SHAP = SHAPResults.sort_values(by='Mean ABS SHAP Value', ascending=False).head(20)

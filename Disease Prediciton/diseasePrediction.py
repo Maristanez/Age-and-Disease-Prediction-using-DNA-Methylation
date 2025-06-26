@@ -3,12 +3,10 @@ import random
 import h5py
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, accuracy_score, confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
+
 from lightgbm import LGBMClassifier
-from sklearn.metrics import (
-    roc_auc_score, f1_score, accuracy_score, precision_score, recall_score,
-    confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
-)
 import shap
 import matplotlib.pyplot as plt
 
@@ -40,14 +38,14 @@ params = {
     "metric": "auc",
     "verbosity": -1,
     "is_unbalance": True,
-    'learning_rate': 0.09421916554105757, 
-    'num_leaves': 21, 
-    'max_depth': 10, 
-    'feature_fraction': 0.34814565990814134, 
-    'bagging_fraction': 0.6084938905627968, 
-    'bagging_freq': 7, 
-    'lambda_l1': 0.4250279160922229, 
-    'lambda_l2': 0.004456047453410966
+    'learning_rate': 0.09497756557572937, 
+    'num_leaves': 54, 
+    'max_depth': 4, 
+    'feature_fraction': 0.20086507526204983, 
+    'bagging_fraction': 0.555135932404743, 
+    'bagging_freq': 3, 
+    'lambda_l1': 1.660777046250498, 
+    'lambda_l2': 3.3614276617667427
 }
 
 #Load selected features
@@ -58,17 +56,29 @@ featureIndices = np.array(sorted(topNFeatures))
 #Evaluation for classifier
 def evaluation(y_valid, y_pred, y_proba):
     itt = f"Top {topN}"
-    rocauc = roc_auc_score(y_valid, y_proba)
-    f1 = f1_score(y_valid, y_pred)
-    acc = accuracy_score(y_valid, y_pred)
-    pre = precision_score(y_valid, y_pred)
-    rec = recall_score(y_valid, y_pred)
+    rocauc = roc_auc_score(disease_type, y_proba)
+    acc = accuracy_score(disease_type, y_pred)
+    f1 = f1_score(disease_type, y_pred)
+    pre = precision_score(disease_type, y_pred)
+    rec = recall_score(disease_type, y_pred)
 
-    print("AUC-ROC:", rocauc)
     print("F1 Score:", f1)
-    print("Accuracy:", acc)
+    print("Average CV Accuracy:", acc)
     print("Precision:", pre)
     print("Recall:", rec)
+
+    # Save results
+    evaluations = pd.read_csv('./Results/disease_evaluation_metrics.csv')
+    finalResults = pd.DataFrame([{
+        "Feature Chunks": itt,
+        "AUC": rocauc,
+        "F1 Score": f1,
+        "Accuracy": acc,
+        "Precision": pre,
+        "Recall": rec
+    }])
+    evaluations = pd.concat([evaluations, finalResults], ignore_index = True)
+    evaluations.to_csv('./Results/disease_evaluation_metrics.csv', index=False)
 
     # Plot Confusion Matrix
     cm = confusion_matrix(y_valid, y_pred)
@@ -77,7 +87,7 @@ def evaluation(y_valid, y_pred, y_proba):
     plt.close()
 
     # Plot ROC Curve
-    fpr, tpr, _ = roc_curve(y_valid, y_proba)
+    fpr, tpr, _ = roc_curve(disease_type, y_proba)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, label=f'AUC = {roc_auc:.2f}')
     plt.plot([0, 1], [0, 1], 'k--')
@@ -87,16 +97,6 @@ def evaluation(y_valid, y_pred, y_proba):
     plt.legend()
     plt.savefig('./Results/ROC Curve.png')
     
-    evaluations = pd.read_csv('./Results/disease_evaluation_metrics.csv')
-    finalResults = pd.DataFrame([{
-        "Feature Chunks": itt,
-        "AUC": rocauc,
-        "Accuracy": acc,
-        "Precision": pre,
-        "Recall": rec
-    }])
-    evaluations = pd.concat([evaluations, finalResults], ignore_index = True)
-    evaluations.to_csv("./Results/disease_evaluation_metrics.csv", index = False)
 
 
 #load h5 data for dataset
@@ -119,17 +119,6 @@ def load_idmap(idmap_dir, disease, control):
     selected_indices = idmap.index[mask].to_numpy()
     return disease_type, selected_indices
 
-#Split dataset using indices of disease from the idmap
-def split_training(indices,y):
-    [indices_train, indices_valid, y_train, y_valid] = train_test_split(
-        indices, y, test_size=0.3, shuffle=True
-    )
-    methylation_train, methylation_valid = (
-        methylation[indices_train],
-        methylation[indices_valid],
-    )
-    return methylation_train, methylation_valid, y_train, y_valid
-
 
 disease_type, disease_indices = load_idmap(idmap_train_path, disease, control)
 
@@ -142,27 +131,24 @@ print(f"Loading time: {time.time() - start:.4f}s")
 #Split data into training and validation
 indices = np.arange(len(disease_type))
 
-methylation_train, methylation_valid, y_train, y_valid = split_training(indices, disease_type)
-del methylation
-
 #Start training
 print("Start training...")
 model = LGBMClassifier(**params)
-start = time.time()
-model.fit(methylation_train, y_train)
-print(f"Training time: {time.time() - start:.4f}s")
+
+# Define stratified 5‑fold CV
+cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
 
 #Evaluate model
-prediction = model.predict(methylation_valid)
-predictionA = model.predict_proba(methylation_valid)[:, 1]
-
-evaluation(y_valid, prediction, predictionA)
+model.fit(methylation, disease_type)
+prediction = cross_val_predict(model, methylation, disease_type, cv=cv)
+predictionA = cross_val_predict(model, methylation, disease_type, cv=cv, method="predict_proba")[:, 1]
+evaluation(disease_type, prediction, predictionA)
 
 #Generate SHAP
 print("SHAP results")
 #SHAP Explainer
-explainer = shap.Explainer(model, methylation_train)
-shap_values = explainer(methylation_valid)
+explainer = shap.Explainer(model, methylation)
+shap_values = explainer(methylation)
 
 #Assign CpG site name to feature name
 with open(siteList, "r") as f:
@@ -170,7 +156,7 @@ with open(siteList, "r") as f:
 shap_values.feature_names = feature_names[featureIndices]
 
 # Summary plot (global feature importance)
-shap.summary_plot(shap_values, methylation_valid, show = False)
+shap.summary_plot(shap_values, methylation, show = False)
 plt.savefig('./Results/diseaseSHAP.png')
 plt.close()
 

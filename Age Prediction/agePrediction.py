@@ -3,12 +3,12 @@ import random
 import h5py
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import (KFold, cross_val_score)
 from lightgbm import LGBMRegressor
-from sklearn.metrics import (mean_absolute_error, median_absolute_error)
 import shap
 import matplotlib.pyplot as plt
 from scipy.stats import ttest_1samp
+
 
 #File paths
 idmap_train_path = "age_idmap.csv"
@@ -52,52 +52,42 @@ idmap = pd.read_csv(idmap_train_path, sep=",")
 age = idmap.age.to_numpy()
 
 #Load methylation dataset and test, split dataset into training and validation
+# Load methylation data
 print("Loading Data...")
 start = time.time()
 methylation = load_methylation_h5(train_path)
 print(f"Loading time: {time.time() - start:.4f}s")
+feature_size = methylation.shape[1]
+print(f"Feature size: {feature_size}")
 
-#Split data
-indices = np.arange(len(age))
-[indices_train, indices_valid, train, valid] = train_test_split(
-    indices, age, test_size=0.3, shuffle=True
-)
-methylation_train, methylation_valid = (
-    methylation[indices_train],
-    methylation[indices_valid],
-)
-feature_size = methylation_train.shape[1]
-print(feature_size)
-del methylation
-
-#Start training
+# Define model
 model = LGBMRegressor(**params)
-print("Start training...")
-start = time.time()
-model.fit(methylation_train, train)
-print(f"Training time: {time.time() - start:.4f}s")
 
-#Evaluations
-prediction = model.predict(methylation_valid)
+# Cross-validation setup
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+mae_scores = -cross_val_score(model, methylation, age, cv=cv,
+                              scoring='neg_mean_absolute_error')
+medae_scores = -cross_val_score(model, methylation, age, cv=cv,
+                                scoring='neg_median_absolute_error')
 
-itt = f'Final {topN}'
-mae = mean_absolute_error(prediction, valid)
-medae = median_absolute_error(prediction, valid)
-print("Mean Absolute Error:" , mae)
-print("Median Absolute Error", medae)
+# Report mean scores
+print("Cross-validated Mean Absolute Error:", np.mean(mae_scores))
+print("Cross-validated Median Absolute Error:", np.mean(medae_scores))
+
+# Save results
 evaluations = pd.read_csv('Results/age_evaluation_metrics.csv')
 finalResults = pd.DataFrame([{
-    "Feature Chunks": itt,
-    "Mean Absolute Error": mae,
-    "Median Absolute Error": medae
-    }])
-evaluations = pd.concat([evaluations, finalResults], ignore_index = True)
-evaluations.to_csv("Results/age_evaluation_metrics.csv", index = False)
+    "Feature Chunks": f'Final {topN}',
+    "Mean Absolute Error": np.mean(mae_scores),
+    "Median Absolute Error": np.mean(medae_scores)
+}])
+evaluations = pd.concat([evaluations, finalResults], ignore_index=True)
+evaluations.to_csv("Results/age_evaluation_metrics.csv", index=False)
 
-#Generate SHAP
-print("SHAP results")
-explainer = shap.Explainer(model, methylation_train)
-shap_values = explainer(methylation_valid)
+#Create SHAP plot
+model.fit(methylation, age)
+explainer = shap.Explainer(model, methylation)
+shap_values = explainer(methylation)
 
 #Assign CpG site name to feature name
 with open(siteList, "r") as f:
@@ -105,7 +95,7 @@ with open(siteList, "r") as f:
 shap_values.feature_names = row_names[featureIndices]
 
 # Summary plot
-shap.summary_plot(shap_values, methylation_valid, show=False)
+shap.summary_plot(shap_values, methylation, show=False)
 plt.savefig('./Results/ageSHAP.png')
 plt.close()
 

@@ -92,6 +92,7 @@ def evaluation(y_valid, y_pred, y_proba):
     metrics_list.append({
         "Feature Chunks": itt,
         "AUC": rocauc,
+        "F1 Score": f1,
         "Accuracy": acc,
         "Precision": pre,
         "Recall": rec

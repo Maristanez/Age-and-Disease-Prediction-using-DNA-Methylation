@@ -9,8 +9,8 @@ from lightgbm import LGBMRegressor
 import optuna
 
 # Setup
-idmap_train_path = "age_idmap.csv"
-train_path = "age_methylation_data.h5"
+idmap_train_path = "./Data Preprocessing/Age/age_idmap.csv"
+train_path = "./Data Preprocessing/Age/age_methylation_data.h5"
 SHAPValues = "Age_SHAP_Values.txt"
 topN = 468
 

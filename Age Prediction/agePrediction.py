@@ -11,9 +11,9 @@ from scipy.stats import ttest_1samp
 
 
 #File paths
-idmap_train_path = "age_idmap.csv"
-train_path = "age_methylation_data.h5"
-siteList = "age_CpG_sites.txt"
+idmap_train_path = "./Data Preprocessing/Age/age_idmap.csv"
+train_path = "./Data Preprocessing/Age/age_methylation_data.h5"
+siteList = "./Data Preprocessing/Age/age_CpG_sites.txt"
 SHAPValues = "Age_SHAP_Values.txt"
 
 #Number of top contributing features to be included in model

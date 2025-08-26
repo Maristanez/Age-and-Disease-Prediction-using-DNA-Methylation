@@ -1,12 +1,17 @@
-import GEOparse
+import sys
 import pandas as pd
+import GEOparse
 
-gse_list = ["GSE153712"]
+print(sys.argv[3:])
+
+gse_list = sys.argv[3:]
+filePath = sys.argv[2]
+output = sys.argv[1]
 
 #Process data for every dataset
 for gse_name in gse_list:
-    gse = GEOparse.get_GEO(gse_name, destdir="./Dataset Preprocessing/Disease Dataset/SOFT Files")
-
+    print(gse_name)
+    gse = GEOparse.get_GEO(filepath=f"{filePath}/{gse_name}_family.soft.gz")
     # List to hold the extracted rows
     records = []
 
@@ -15,6 +20,7 @@ for gse_name in gse_list:
         metadata = {
                 "sample_id": gsm_name,
                 "sex": None,
+                "age": None,
                 "disease_state": None,
             }
 
@@ -28,8 +34,15 @@ for gse_name in gse_list:
                 #Save value
                 if key in ["sex", "gender", "Sex", "gender (1=woman; 0=man)"]:
                     metadata["sex"] = value
-                elif key == "disease status":
-                    metadata["disease_state"] = value
+                elif key in ["age", "age (y)", "age in 2011"]:
+                    metadata["age"] = value
+                elif key in ["disease status", "disease state"]:
+                    if value in ["Alzheimer's Disease", "Alzheimer's disease"]:
+                        metadata["disease_state"] = "Alzheimer's"
+                    elif value in ["Mild Cognitive Impairment", "mild cognitive impairment"]:
+                        metadata["disease_state"] = "MCI"
+                    elif value in ["healthy control", "control"]:
+                        metadata["disease_state"] = "control"
 
         records.append(metadata)
 
@@ -37,5 +50,4 @@ for gse_name in gse_list:
     # Convert to DataFrame and save as csv file
     df = pd.DataFrame(records)
     print(df.head())
-
-    df.to_csv(f'./Dataset Preprocessing/Disease Dataset/ID Maps/{gse_name}_idmap.csv', index = False)
+    df.to_csv(f'{output}/{gse_name}_idmap.csv', index = False)

@@ -8,9 +8,9 @@ from lightgbm import LGBMRegressor
 from sklearn.metrics import (mean_absolute_error, median_absolute_error)
 import shap
 
-idmap_train_path = "age_idmap.csv"
+idmap_train_path = "./Data Preprocessing/Age/age_idmap.csv"
 
-train_path = "age_methylation_data.h5"
+train_path = "./Data Preprocessing/Age/age_methylation_data.h5"
 
 
 seed = int(time.time())

@@ -10,15 +10,15 @@ from sklearn.metrics import roc_auc_score
 
 
 #File paths
-idmap_train_path = "disease_idmap.csv"
-train_path = "disease_methylation_data.h5"
-siteList = "disease_CpG_sites.txt"
-SHAPValues = "Disease_SHAP_Values.txt"
+idmap_train_path = "./Data Preprocessing/Disease/disease_idmap.csv"
+train_path = "./Data Preprocessing/Disease/disease_methylation_data.h5"
+siteList = "./Data Preprocessing/Disease/disease_CpG_sites.txt"
+SHAPValues = "./Data Preprocessing/Disease/Disease_SHAP_Values.txt"
 
 #Disease of interest to compare with control
-disease = "Alzheimer's disease"
+disease = "Alzheimer's"
 control = 'control'
-mci = "Mild Cognitive Impairment"
+mci = "MCI"
 
 #Number of top contributing features to be included in model
 topN = 500

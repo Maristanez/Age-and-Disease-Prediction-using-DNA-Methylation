@@ -10,8 +10,8 @@ from sklearn.metrics import (
 from lightgbm import LGBMClassifier
 import shap
 
-idmap_train_path = "disease_idmap.csv"
-train_path = "disease_methylation_data.h5"
+idmap_train_path = "./Data Preprocessing/Disease/disease_idmap.csv"
+train_path = "./Data Preprocessing/Disease/disease_methylation_data.h5"
 
 seed = int(time.time())
 np.random.seed(seed)
@@ -36,9 +36,9 @@ params = {
 
 chunkSize = 111743
 
-disease = "Alzheimer's disease"
+disease = "Alzheimer's"
 control = 'control'
-mci = "Mild Cognitive Impairment"
+mci = "MCI"
 
 #load h5 data
 def load_methylation_h5(path, i,sample_indices):
